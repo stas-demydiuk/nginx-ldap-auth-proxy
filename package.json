@@ -2,7 +2,7 @@
   "name": "nginx-ldap-auth-proxy",
   "version": "1.0.0",
   "description": "Node server for LDAP auth",
-  "main": "index.js",
+  "license": "MIT",
   "author": {
     "name": "Stanislav Demydiuk",
     "email": "s.demydiuk@gmail.com"
@@ -11,8 +11,11 @@
     "type": "git",
     "url": "https://github.com/stas-demydiuk/nginx-ldap-auth-proxy"
   },
-  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
+    "cookies": "^0.6.2",
     "ldapauth-fork": "~3.0.0"
   }
 }
