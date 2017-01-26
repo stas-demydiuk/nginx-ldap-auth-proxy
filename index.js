@@ -112,6 +112,12 @@ function getLdapInstance(request) {
         reconnect: true
     };
 
+    if (request.headers['x-ldap-group-template']) {
+        config.groupSearchBase = request.headers['x-ldap-group-basedn'];
+        config.groupSearchFilter = request.headers['x-ldap-group-template'];
+        config.groupDnProperty = request.headers['x-ldap-group-dnproperty'] || 'uid'
+    }
+
     let key = JSON.stringify(config);
 
     if (!ldapInstances.has(key)) {
@@ -134,7 +140,15 @@ function auth(request, cookies) {
             password = data[1];
 
         ldapInstance.authenticate(username, password, (err, user) => {
-            err ? reject(err) : resolve(user);
+            if (err) {
+                reject(err);
+            }
+
+            if (request.headers['x-ldap-group-template'] && !user._groups.length) {
+                reject('User is not a member of required group')
+            } else {
+                resolve(user);
+            }
         });
     });
 }
