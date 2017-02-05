@@ -133,6 +133,7 @@ function auth(request, cookies) {
     return new Promise((resolve, reject) => {
         if (!cookies.get(COOKIE_NAME)) {
             reject(401);
+            return;
         }
 
         let data = decrypt(cookies.get(COOKIE_NAME)).split(':'),
@@ -141,7 +142,7 @@ function auth(request, cookies) {
 
         ldapInstance.authenticate(username, password, (err, user) => {
             if (err) {
-                reject(err);
+                return reject(err);
             }
 
             if (request.headers['x-ldap-group-template'] && !user._groups.length) {
