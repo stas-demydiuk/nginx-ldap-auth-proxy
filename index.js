@@ -10,7 +10,7 @@ const
 
 const
     PORT = 8888,
-    ALGORITHM = 'aes-256-ctr',
+    ALGORITHM = 'aes-256-cbc',
     COOKIE_NAME = process.env.COOKIE_NAME || 'LDAP_AUTH',
     COOKIE_SECRET = process.env.COOKIE_SECRET || '1xEEgQamX25IhpZ04f2h';
 
@@ -155,17 +155,23 @@ function auth(request, cookies) {
 }
 
 function encrypt(text) {
-    let cipher = crypto.createCipher(ALGORITHM, COOKIE_SECRET),
-        crypted = cipher.update(text, 'utf8', 'hex');
+    let iv = crypto.randomBytes(16);
+    let cipher = crypto.createCipheriv(ALGORITHM, new Buffer.from(COOKIE_SECRET), iv);
+    let encrypted = cipher.update(text);
 
-    crypted += cipher.final('hex');
-    return crypted;
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+
+    return iv.toString('hex') + ':' + encrypted.toString('hex');
 }
 
 function decrypt(text) {
-    let decipher = crypto.createDecipher(ALGORITHM, COOKIE_SECRET),
-        dec = decipher.update(text, 'hex', 'utf8');
+    let textParts = text.split(':');
+    let iv = new Buffer.from(textParts.shift(), 'hex');
+    let encryptedText = new Buffer.from(textParts.join(':'), 'hex');
+    let decipher = crypto.createDecipheriv(ALGORITHM, new Buffer.from(COOKIE_SECRET), iv);
+    let decrypted = decipher.update(encryptedText);
 
-    dec += decipher.final('utf8');
-    return dec;
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+
+    return decrypted.toString();
 }
